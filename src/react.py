@@ -1,6 +1,6 @@
 from dotenv import load_dotenv
 from langchain_ollama import ChatOllama
-from langgraph.graph import StateGraph, START, END
+from langgraph.graph import StateGraph, START
 from langgraph.prebuilt import ToolNode, tools_condition
 from langgraph.checkpoint.memory import MemorySaver
 
@@ -16,7 +16,7 @@ tools = [translate45, translate63]
 llm_with_tools = ChatOllama(model="qwen3:8b").bind_tools(tools)
 
 def reasoning(state: State):
-    return {"messages": [llm_with_tools.invoke(state["messages"])]}
+    return {"messages": [llm_with_tools.stream(state["messages"])]}
 
 
 graph_builder = StateGraph(State)
@@ -48,7 +48,7 @@ def main():
         if not user_input.strip():
             continue
         print_processing()
-        result = graph.invoke({"messages": [("user", user_input)]}, config=config)
+        result = graph.stream({"messages": [("user", user_input)]}, config=config, stream_mode="updates")
         print_response(result["messages"][-1].content)
 
     print_exit()
